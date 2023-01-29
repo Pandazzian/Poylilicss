@@ -32,6 +32,8 @@
 <script>
 import 'bootstrap/dist/css/bootstrap.css'
 import 'bootstrap-vue/dist/bootstrap-vue.css'
+const { signinUser } = useFirebaseAuth()
+
 export default {
   data() {
     return{
@@ -43,8 +45,20 @@ export default {
     onClickRegister(){
       this.$router.push("/register")
     },
-    onSubmitLogin(){
-      console.log(this.email+" : "+this.password)
+    async onSubmitLogin(){
+      await registerUser(this.email, this.password).then((response) => {
+              if(response){
+                $swal.fire({
+                  position: 'top-end',
+                  icon: 'success',
+                  title: 'login successful',
+                  showConfirmButton: false,
+                  timer: 1500
+                }).then(() => {
+                    this.$router.push('/main')
+                })
+              }
+            })
     }
   }
 }
