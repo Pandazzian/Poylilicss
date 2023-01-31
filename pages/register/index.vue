@@ -29,6 +29,8 @@
 <script>
 import 'bootstrap/dist/css/bootstrap.css'
 import 'bootstrap-vue/dist/bootstrap-vue.css'
+const { registerUser } = useFirebaseAuth()
+
 export default {
   data() {
     return{
@@ -38,13 +40,37 @@ export default {
     }
   },
   methods:{
-    onSubmit(){
-        if(this.password!=='' && this.password.length>=8){
-            if(this.password===this.password_ver){
-                
-            }
+    async onSubmit(){
+        if(this.password.length>=8){
+          if(this.password===this.password_ver){
+            await registerUser(this.email, this.password).then((response) => {
+              if(response){
+                $swal.fire({
+                  position: 'top-end',
+                  icon: 'success',
+                  title: 'register',
+                  showConfirmButton: false,
+                  timer: 1500
+                })
+              }
+            })
+          }else{
+            $swal.fire({
+              title: 'Error!',
+              text: 'The password does not match',
+              icon: 'error',
+              confirmButtonText: "I\'m sorry I fat fingered :("
+            })
+          }
+        }else{
+          $swal.fire({
+              title: 'Error!',
+              text: 'The password need to be atleast 8 characters',
+              icon: 'error',
+              confirmButtonText: "oke papi"
+            })
         }
-      console.log(this.email+" : "+this.password)
+      // console.log(this.email+" : "+this.password)
     }
   }
 }
