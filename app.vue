@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="page-container">
     <Nav />
     <NuxtPage class="m-2"/>
   </div>
@@ -33,3 +33,14 @@ export default {
   // }
 }
 </script>
+<style>
+html, body {
+  height: 95% !important;
+}
+body{
+  position: relative;
+}
+.page-container {
+  height: 100%;
+}
+</style>
