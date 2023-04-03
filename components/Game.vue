@@ -1,6 +1,6 @@
 <template>
     <div style="height:100%">
-        <div class="row" style="height:100%">
+        <div class="row" style="height:100%" v-if="isStarted">
             <div class="col-3">
                 <div class="col-12 mt-2 mb-2" v-for="player in players" :key="player.playerId">
                     <div class="card" v-if="!player.isCurrentPlayer">
@@ -22,9 +22,14 @@
                 </div>
             </div>
             <div class="col-9">
-                <div class="row">
-                    <div class="col align-self-end">
-
+                <div class="row justify-content-md-center">
+                    <div class="col-6">
+                        <div class="card" style="width: 18rem;">
+                            <div class="card-body" style="background-color:black">
+                                <h5 style="color: antiquewhite;">your problem(s): </h5>
+                                <h6 class="card-subtitle mb-2" style="color:white">{{ currentProblemCard.text }}</h6>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -51,17 +56,18 @@
                     </div>
                     <div class="col-9">
                         <div class="row">
-                            <!-- <mdb-card class="col-3">
-                                <mdb-card-img src="/path/to/image.jpg" alt="Image" top />
-                                <mdb-card-body>
-                                <h4 class="card-title">Title</h4>
-                                <p class="card-text">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed ut ante ac felis ornare facilisis.</p>
-                                </mdb-card-body>
-                            </mdb-card> -->
+                            <div class="card" style="width: 18rem;" v-for="card in getCurrentPlayer().cards" :key="card.id">
+                                <div @click="choseCard(card)" class="card-body">
+                                    <h6 class="card-subtitle mb-2 text-muted">{{ card.text }}</h6>
+                                </div>
+                            </div>
                         </div>
                     </div> 
                 </div>
             </div>
+        </div>
+        <div v-else>
+            <button @click="dealCards">Click me</button>
         </div>
     </div>
 </template>
@@ -70,8 +76,13 @@
 import 'bootstrap/dist/css/bootstrap.css'
 import 'bootstrap-vue/dist/bootstrap-vue.css'
 export default {
+    mounted(){
+        // this.dealCards();
+        // console.log(players)
+    },
     data(){
         return{
+            isStarted:false,
             turnIndicator: 0,
             playerCount: 4,
             table:[],
@@ -353,6 +364,20 @@ export default {
         }
     },
     methods:{
+        
+        dealCards(){
+            this.problemsDeck = this.shuffleArray(this.problemsDeck)
+            this.currentProblemCard = this.problemsDeck[0]
+            let shuffleed = this.shuffleArray(this.policyDeck)
+            let running = 0
+            for (let i = 0;i<this.playerCount;i++) {
+                for (let index = 0; index < 10; index++) {
+                    this.players[i].cards.push(shuffleed[running++])
+                }
+            }
+            this.isStarted= true;
+            console.log(players)
+        },
         getCurrentPlayer(){
             for(let i = 0;i<this.playerCount;i++){
                 // console.log(this.players[i])
@@ -368,19 +393,25 @@ export default {
                     votes: 0,
                     cards: [],
             }
-            // return this.players.forEach(player=>{
-            //     if(player.isCurrentPlayer){
-            //         return player
-            //     }
-            // })
         },
-        // getVoter(){
-        //     for(player in this.players){
-        //         if(player.isVoter){
-        //             return player
-        //         }
-        //     }
-        // },
+        choseCard(card){
+            this.table.push(card)
+            this.getCurrentPlayer().cards = this.getCurrentPlayer().cards.filter(obj => obj !== card)
+        },
+        shuffleArray(array) {
+            // Copy the original array to avoid modifying the original
+            const shuffledArray = [...array];
+
+            for (let i = shuffledArray.length - 1; i > 0; i--) {
+                // Generate a random index from 0 to i
+                const j = Math.floor(Math.random() * (i + 1));
+                // Swap the elements at i and j
+                [shuffledArray[i], shuffledArray[j]] = [shuffledArray[j], shuffledArray[i]];
+            }
+
+            return shuffledArray;
+            }
+
     }
 }
 </script>
