@@ -37,6 +37,7 @@ export default {
 <style>
 html, body {
   height: 95% !important;
+  background-image: url('@/assets/images/papers.co-ne57-green-city-cloud-metropolitan-urban-building-36-3840x2400-4k-wallpaper.jpg');
 }
 body{
   position: relative;

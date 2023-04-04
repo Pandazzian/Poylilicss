@@ -11,7 +11,7 @@
                                 </div>
                                 <div class="col-8">
                                     <h5 class="card-title">{{player.playerName}}</h5>
-                                    <h6 class="card-subtitle mb-2 text-muted">votes:{{player.votes}}</h6>
+                                    <h6 class="card-subtitle mb-2 text-muted">votes:{{player.votes}}K</h6>
                                     <p v-if="player.isVoter" style="color: green">*Voter*</p>
                                 </div>
                             </div>
@@ -31,6 +31,32 @@
                             </div>
                         </div>
                     </div>
+                    <div class="col-12 mt-3 mb-2">
+                        <h5 style="text-align: center;">
+                            {{ isVoterTurn?"Rank the cards you like the most\n from 1st, 2nd, to, 3rd respectively":"on the table:" }}
+                        </h5>
+                    </div>
+                    <div class="col-12 mt-2">
+                        <div class="card-container" ref="cardContainer">
+                            <div
+                                v-for="(card, index) in table"
+                                :key="card.card.id"
+                                class="card-grab card "
+                                :style="{ left: cardLeftPositions[index] + 'px' }"
+                                style="padding-top: 8rem;padding-bottom: 8rem;align-items: center;"
+                                @mousedown="onCardMouseDown(index, $event)"
+                            >
+                                {{ isVoterTurn?card.card.text:card.player.playerName+"'s card'" }}
+                            </div>
+                        </div>
+                        <!-- <div class="row">
+                            <div class="col-3" v-for="card in table" :key="card.id">
+                                <div class="card" style="padding-top: 10rem;padding-bottom: 10rem;align-items: center;">
+                                    <h6 class="card-subtitle mb-2 text-muted">{{ card.card.text }}</h6>
+                                </div>
+                            </div>
+                        </div> -->
+                    </div>
                 </div>
             </div>
 
@@ -45,47 +71,98 @@
                                     </div>
                                     <div class="col-8">
                                         <h5 class="card-title">{{getCurrentPlayer().playerName}}</h5>
-                                        <h6 class="card-subtitle mb-2 text-muted">votes:{{getCurrentPlayer().votes}}</h6>
+                                        <h6 class="card-subtitle mb-2 text-muted">votes:{{getCurrentPlayer().votes}}K</h6>
                                         <p v-if="getCurrentPlayer().isVoter" style="color: green">*Voter*</p>
                                     </div>
                                 </div>
-                                
-                                <!-- <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p> -->
                             </div>
                         </div>
                     </div>
-                    <div class="col-9">
-                        <div class="row">
-                            <div class="card" style="width: 18rem;" v-for="card in getCurrentPlayer().cards" :key="card.id">
-                                <div @click="choseCard(card)" class="card-body">
-                                    <h6 class="card-subtitle mb-2 text-muted">{{ card.text }}</h6>
+                    <div class="col-9 card-carousel" v-if="!isVoterTurn">
+                        <div class="cards">
+                            <div v-for="card in getCurrentPlayer().cards" :key="card.id">
+                                <div class="card" style="height: 120px; width: 100px;">
+                                    <div @click="tempCard=card; showModal = true" class="card-body" style="display: flex;justify-content: center; align-items: center;cursor: pointer;">
+                                        <p class="card-subtitle text-muted" style="font-size: 0.75rem;">{{ card.text }}</p>
+                                    </div>
+                                    <!-- <button class="btn btn-primary" @click="showModal = true">Activate Modal</button> -->
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                    <div class="col-9" v-else style="display: flex;justify-content: flex-end; align-items: center;">
+                        <div >
+                            <button @click="onConfirmRanking" type="button" class="btn btn-primary">
+                                Confirm
+                            </button>
                         </div>
                     </div> 
                 </div>
             </div>
         </div>
-        <div v-else>
-            <button @click="dealCards">Click me</button>
+        <div class="container" v-else>
+            <div class="row">
+                <div class="col-12 d-flex justify-content-center align-items-center" style="height: 300px;">
+                    <button @click="dealCards" class="btn btn-primary btn-lg">Start</button>
+                </div>
+            </div>
         </div>
+        <div class="modal" tabindex="-1" role="dialog" :class="{ 'd-block': showModal }">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">U sure?</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close" @click="showModal = false">
+                    <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                    <label for="inputText">explaination/reasoning:</label>
+                    <input type="text" class="form-control" id="inputText" v-model="reasoning">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" @click="choseCard(tempCard)">Confirm</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal" @click="showModal = false">Close</button>
+                </div>
+                </div>
+            </div>
+        </div>
+        <!-- <div v-else>
+            <button @click="dealCards">Click me</button>
+        </div> -->
     </div>
 </template>
 
 <script>
+import { MdbCard, MdbCardHeader, MdbCardBody } from 'mdbvue';
 import 'bootstrap/dist/css/bootstrap.css'
 import 'bootstrap-vue/dist/bootstrap-vue.css'
 export default {
+    components: {
+        MdbCard,
+        MdbCardHeader,
+        MdbCardBody
+    },
     mounted(){
         // this.dealCards();
         // console.log(players)
     },
     data(){
         return{
+            showModal: false,
+            reasoning:"",
+            isDragging: false,
+            startIndex: null,
+            startLeft: null,
+            cardLeftPositions: [],
+            isVoterTurn: false,
             isStarted:false,
             turnIndicator: 0,
             playerCount: 4,
             table:[],
+            tempCard:{},
             currentProblemCard: {id:-1,text:"place holder"},
             policyDeck:[
                 {
@@ -134,155 +211,163 @@ export default {
                 },
                 {
                     id: 11,
-                    text: "place hoder"
+                    text: "Every Monday is \"Pajama Day,\" where all citizens are encouraged to wear their favorite sleepwear to work."
                 },
                 {
                     id: 12,
-                    text: "place hoder"
+                    text: "All public buildings must have a mandatory slide next to every staircase for faster and more fun transportation."
                 },
                 {
                     id: 13,
-                    text: "place hoder"
+                    text: "The national currency will be replaced with a system of high-fives, with the value of the high-five determined by the quality of the gesture."
                 },
                 {
                     id: 14,
-                    text: "place hoder"
+                    text: "Citizens must have at least one silly dance move that they can perform on command."
                 },
                 {
                     id: 15,
-                    text: "place hoder"
+                    text: "Every year, the entire country will shut down for a week-long holiday dedicated to celebrating ice cream."
                 },
                 {
                     id: 16,
-                    text: "place hoder"
+                    text: "Citizens will be encouraged to take naps in the middle of the day to increase productivity and happiness."
                 },
                 {
                     id: 17,
-                    text: "place hoder"
+                    text: "All pets will be required to wear cute and fashionable outfits."
                 },
                 {
                     id: 18,
-                    text: "place hoder"
+                    text: "All citizens must have a \"happy hour\" every day, where they spend at least an hour doing something that brings them joy."
                 },
                 {
                     id: 19,
-                    text: "place hoder"
+                    text: "A \"no frown\" policy will be enforced, where anyone caught frowning will be required to attend a mandatory tickle party."
                 },
                 {
                     id: 20,
-                    text: "place hoder"
+                    text: "All citizens will have access to free popcorn and cotton candy at all times."
                 },
                 {
                     id: 21,
-                    text: "place hoder"
+                    text: "All cars must have a clown nose attached to the front bumper."
                 },
                 {
                     id: 22,
-                    text: "place hoder"
+                    text: "The national sport will be a game of dodgeball played on trampolines."
                 },
                 {
                     id: 23,
-                    text: "place hoder"
+                    text: "All public restrooms will have a mandatory karaoke machine for entertainment."
                 },
                 {
                     id: 24,
-                    text: "place hoder"
+                    text: "All restaurants must serve their food in waffle cones to encourage a more portable and fun eating experience."
                 },
                 {
                     id: 25,
-                    text: "place hoder"
+                    text: "All official government documents must be written in rhyme."
                 },
                 {
                     id: 26,
-                    text: "place hoder"
+                    text: "A mandatory daily \"joke hour\" will be held on all public transportation to boost morale and reduce stress."
                 },
                 {
                     id: 27,
-                    text: "place hoder"
+                    text: "All citizens must have a secret handshake that they can use to identify each other in public."
                 },
                 {
                     id: 28,
-                    text: "place hoder"
+                    text: "A mandatory \"happy thoughts\" session will be held every morning to start the day on a positive note."
                 },
                 {
                     id: 29,
-                    text: "place hoder"
+                    text: "The national anthem will be rewritten to include lyrics about unicorns and rainbows."
                 },
                 {
                     id: 30,
-                    text: "place hoder"
+                    text: "All parks will have at least one giant inflatable bounce house for citizens to enjoy."
                 },
                 {
                     id: 31,
-                    text: "place hoder"
+                    text: "Every citizen will be assigned a personal jester to make them laugh whenever they're feeling down."
                 },
                 {
                     id: 32,
-                    text: "place hoder"
+                    text: "All public transportation will be replaced with giant inflatable balls that citizens can hop inside and roll around in."
                 },
                 {
                     id: 33,
-                    text: "place hoder"
+                    text: "Every year, the entire country will have a massive pillow fight to release stress and promote a sense of community."
                 },
                 {
                     id: 34,
-                    text: "place hoder"
+                    text: "All government buildings will be required to have a ball pit in the lobby for citizens to play in."
                 },
                 {
                     id: 35,
-                    text: "place hoder"
+                    text: "A mandatory \"silly hat\" policy will be enforced, where all citizens must wear a ridiculous hat in public."
                 },
                 {
                     id: 36,
-                    text: "place hoder"
+                    text: "All streetlights will be replaced with giant lollipops for a sweeter and more whimsical cityscape."
                 },
                 {
                     id: 37,
-                    text: "place hoder"
+                    text: "The national bird will be a penguin, even if the country is nowhere near the poles."
                 },
                 {
                     id: 38,
-                    text: "place hoder"
+                    text: "A mandatory \"compliment hour\" will be held every day, where citizens must compliment at least 10 people they encounter."
                 },
                 {
                     id: 39,
-                    text: "place hoder"
+                    text: "All public restrooms will be decorated to look like a fairy tale forest to encourage creativity and imagination."
                 },
                 {
                     id: 40,
-                    text: "place hoder"
+                    text: "All police officers will be required to wear superhero costumes to inspire confidence and heroism."
                 },
                 {
                     id: 41,
-                    text: "place hoder"
+                    text: "A national \"hug day\" will be celebrated every week to promote physical and emotional connection between citizens."
                 },
                 {
                     id: 42,
-                    text: "place hoder"
+                    text: "All government meetings will be held in a giant ball pit to encourage creative thinking and playfulness."
                 },
                 {
                     id: 43,
-                    text: "place hoder"
+                    text: "Every citizen will have a \"funny name\" assigned to them, which they must use in all official documents and interactions."
                 },
                 {
                     id: 44,
-                    text: "place hoder"
+                    text: "A mandatory \"silly walk\" policy will be enforced, where citizens must walk in a goofy and ridiculous manner in public."
                 },
                 {
                     id: 45,
-                    text: "place hoder"
+                    text: "All public parks will have a section dedicated to bounce houses and inflatable obstacle courses for citizens to enjoy."
                 },
                 {
                     id: 46,
-                    text: "place hoder"
+                    text: "A national holiday will be dedicated to the celebration of bad puns and cheesy jokes."
                 },
                 {
                     id: 47,
-                    text: "place hoder"
+                    text: "All public libraries will have a mandatory nap time every day for citizens to rest and recharge."
                 },
                 {
                     id: 48,
-                    text: "place hoder"
+                    text: "A national \"paint your pet\" day will be celebrated every year, where citizens must paint or draw their pets in creative and silly ways."
+                },
+                {
+                    id: 49,
+                    text: "All public transportation will be required to have a DJ booth for citizens to play their favorite music and dance during their commute."
+                },
+                {
+                    id: 50,
+                    text: "A mandatory \"silly hat\" day will be celebrated every month, where citizens must wear a unique and ridiculous hat to work or school."
                 },
             ],
             problemsDeck:[
@@ -331,6 +416,7 @@ export default {
                 {
                     playerId: 0,
                     playerName: "player1",
+                    played:false,
                     isCurrentPlayer: true,
                     isVoter:false,
                     votes: 0,
@@ -339,6 +425,7 @@ export default {
                 {
                     playerId: 1,
                     playerName: "player2",
+                    played:false,
                     isCurrentPlayer: false,
                     isVoter:false,
                     votes: 0,
@@ -347,6 +434,7 @@ export default {
                 {
                     playerId: 2,
                     playerName: "player3",
+                    played:false,
                     isCurrentPlayer: false,
                     isVoter:false,
                     votes: 0,
@@ -355,6 +443,7 @@ export default {
                 {
                     playerId: 3,
                     playerName: "player4",
+                    played:false,
                     isCurrentPlayer: false,
                     isVoter:true,
                     votes: 0,
@@ -364,7 +453,44 @@ export default {
         }
     },
     methods:{
-        
+        onConfirmRanking(){
+            const sortedArray = [...this.cardLeftPositions].sort((a, b) => a - b);
+            const lowestValues = sortedArray.slice(0, 3);
+            const players = lowestValues.map(value => this.table[this.cardLeftPositions.indexOf(value)].player);
+            players[0].votes += 25
+            players[1].votes += 18
+            players[2].votes += 15
+        },
+        onCardMouseDown(index, event) {
+            event.preventDefault();
+            this.isDragging = true;
+            this.startIndex = index;
+            this.startLeft = event.clientX - event.currentTarget.offsetLeft;
+            document.addEventListener('mousemove', this.onMouseMove);
+            document.addEventListener('mouseup', this.onMouseUp);
+        },
+        onMouseMove(event) {
+            if (this.isDragging) {
+            const newLeftPositions = [...this.cardLeftPositions];
+            newLeftPositions[this.startIndex] = event.clientX - this.startLeft;
+            this.cardLeftPositions = newLeftPositions;
+            }
+        },
+        onMouseUp() {
+            this.isDragging = false;
+            this.startIndex = null;
+            this.startLeft = null;
+            document.removeEventListener('mousemove', this.onMouseMove);
+            document.removeEventListener('mouseup', this.onMouseUp);
+        },
+        calculateCardLeftPositions() {
+            const cardElements = this.$refs.cardContainer.children;
+            const cardLeftPositions = [];
+            for (let i = 0; i < cardElements.length; i++) {
+            cardLeftPositions.push(cardElements[i].offsetLeft);
+            }
+            this.cardLeftPositions = cardLeftPositions;
+        },
         dealCards(){
             this.problemsDeck = this.shuffleArray(this.problemsDeck)
             this.currentProblemCard = this.problemsDeck[0]
@@ -374,15 +500,25 @@ export default {
                 for (let index = 0; index < 10; index++) {
                     this.players[i].cards.push(shuffleed[running++])
                 }
+
             }
             this.isStarted= true;
-            console.log(players)
         },
         getCurrentPlayer(){
-            for(let i = 0;i<this.playerCount;i++){
-                // console.log(this.players[i])
-                if(this.players[i].isCurrentPlayer){
-                    return this.players[i]
+            if(this.isVoterTurn){
+                for(let i = 0;i<this.playerCount;i++){
+                    // console.log(this.players[i])
+                    if(this.players[i].isVoter){
+                        return this.players[i]
+                    }
+                }
+            }
+            else{
+                for(let i = 0;i<this.playerCount;i++){
+                    // console.log(this.players[i])
+                    if(this.players[i].isCurrentPlayer){
+                        return this.players[i]
+                    }
                 }
             }
             return {
@@ -392,11 +528,37 @@ export default {
                     isVoter:false,
                     votes: 0,
                     cards: [],
-            }
+            }   
         },
         choseCard(card){
-            this.table.push(card)
+            this.showModal=false;
+            this.table.push({card:card,player:this.getCurrentPlayer()})
             this.getCurrentPlayer().cards = this.getCurrentPlayer().cards.filter(obj => obj !== card)
+            this.nextPlayer()
+        },
+        nextPlayer(){
+            let allPlayed = true;
+            for (let i = 0; i < this.playerCount; i++) {
+                if(this.players[i].isCurrentPlayer){
+                    this.players[i].isCurrentPlayer = false;
+                    this.players[i].played = true;
+                }
+                // if(!this.players[i].played && !this.players[i].isVoter){
+                //     this.players[i].isCurrentPlayer = true;
+                //     allPlayed = false;
+                // }
+            }
+            for (let i = 0; i < this.playerCount; i++) {
+                if(!this.players[i].played && !this.players[i].isVoter){
+                    this.players[i].isCurrentPlayer = true;
+                    allPlayed=false;
+                    return
+                }
+            }
+            if(allPlayed){
+                this.isVoterTurn = true;
+            }
+            // console.log(this.players)
         },
         shuffleArray(array) {
             // Copy the original array to avoid modifying the original
@@ -411,7 +573,7 @@ export default {
 
             return shuffledArray;
             }
-
+        
     }
 }
 </script>
@@ -420,5 +582,17 @@ export default {
 .my-div {
   position: absolute;
   bottom: 0;
+}
+
+.cards {
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  gap: 0.5rem;
+  padding: 1rem;
+}
+.card-carousel {
+  /* set container styles */
+  margin: 1rem 0;
 }
 </style>

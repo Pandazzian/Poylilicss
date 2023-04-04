@@ -34,7 +34,21 @@ const config: NuxtConfig = {
       { hid: 'description', name: 'description', content: 'My Nuxt.js App' }
     ],
     link: [
-      { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }
+      { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
+      {
+        rel: 'stylesheet',
+        href: 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css'
+      },
+      {
+        rel: 'stylesheet',
+        href: 'https://cdn.jsdelivr.net/npm/mdbvue@latest/css/mdb.min.css'
+      }
+    ],
+    script: [
+      {
+        src: 'https://cdn.jsdelivr.net/npm/mdbvue@latest/js/mdb.min.js',
+        body: true
+      }
     ]
   },
 
