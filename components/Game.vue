@@ -1,35 +1,40 @@
 <template>
     <div style="height:100%">
-        <div class="row" style="height:100%" v-if="isStarted">
+        <div class="row" style="height:100%" v-if="isStarted&&winner==null">
             <div class="col-3">
                 <div class="col-12 mt-2 mb-2" v-for="player in players" :key="player.playerId">
-                    <div class="card" v-if="!player.isCurrentPlayer">
+                    <div class="card" v-if="isVoterTurn?!player.isVoter:!player.isCurrentPlayer ">
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-4">
-                                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/24/Missing_avatar.svg/1024px-Missing_avatar.svg.png" height="auto" width="100%">
+                                    <img src="@/assets/images/dog.jpg" height="auto" width="100%">
                                 </div>
                                 <div class="col-8">
                                     <h5 class="card-title">{{player.playerName}}</h5>
                                     <h6 class="card-subtitle mb-2 text-muted">votes:{{player.votes}}K</h6>
                                     <p v-if="player.isVoter" style="color: green">*Voter*</p>
                                 </div>
-                            </div>
-                            
-                            <!-- <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p> -->
+                            </div>   
                         </div>
                     </div>          
                 </div>
             </div>
             <div class="col-9">
                 <div class="row justify-content-md-center">
+                    <div class="col-3">
+
+                    </div>
                     <div class="col-6">
-                        <div class="card" style="width: 18rem;">
+                        <div class="card" >
                             <div class="card-body" style="background-color:black">
                                 <h5 style="color: antiquewhite;">your problem(s): </h5>
                                 <h6 class="card-subtitle mb-2" style="color:white">{{ currentProblemCard.text }}</h6>
                             </div>
                         </div>
+                    </div>
+                    <div class="col-3" style="align-self: center;text-align: -webkit-center;">
+                        <h5>{{ daysLeft }} days</h5>
+                        <h5>before election</h5>
                     </div>
                     <div class="col-12 mt-3 mb-2">
                         <h5 style="text-align: center;">
@@ -38,16 +43,22 @@
                     </div>
                     <div class="col-12 mt-2">
                         <div class="card-container" ref="cardContainer">
-                            <div
+                            <b-card
+                                v-b-tooltip.hover 
+                                :title="card.reasoning"
                                 v-for="(card, index) in table"
                                 :key="card.card.id"
                                 class="card-grab card "
                                 :style="{ left: cardLeftPositions[index] + 'px' }"
                                 style="padding-top: 8rem;padding-bottom: 8rem;align-items: center;"
                                 @mousedown="onCardMouseDown(index, $event)"
-                            >
+                                text="Tooltip"
+                            >   
                                 {{ isVoterTurn?card.card.text:card.player.playerName+"'s card'" }}
-                            </div>
+                                <!-- <div v-if="showText && isVoterTurn">
+                                    This text will be displayed on hover.
+                                </div> -->
+                            </b-card>
                         </div>
                         <!-- <div class="row">
                             <div class="col-3" v-for="card in table" :key="card.id">
@@ -62,7 +73,7 @@
 
             <div class="my-div">
                 <div class="row">
-                    <div class="col-3">
+                    <div class="col-3" style="align-self: flex-end;">
                         <div class="card">
                             <div class="card-body">
                                 <div class="row">
@@ -83,7 +94,7 @@
                             <div v-for="card in getCurrentPlayer().cards" :key="card.id">
                                 <div class="card" style="height: 120px; width: 100px;">
                                     <div @click="tempCard=card; showModal = true" class="card-body" style="display: flex;justify-content: center; align-items: center;cursor: pointer;">
-                                        <p class="card-subtitle text-muted" style="font-size: 0.75rem;">{{ card.text }}</p>
+                                        <p class="card-subtitle text-muted" style="font-size: 0.5rem;">{{ card.text }}</p>
                                     </div>
                                     <!-- <button class="btn btn-primary" @click="showModal = true">Activate Modal</button> -->
                                 </div>
@@ -102,7 +113,11 @@
         </div>
         <div class="container" v-else>
             <div class="row">
-                <div class="col-12 d-flex justify-content-center align-items-center" style="height: 300px;">
+                <div class="col-12" v-if="winner!=null" style="text-align: -webkit-center;">
+                    <h1>All Hail New Priminister: {{ winner.playerName }}</h1>
+                    <button @click="$nuxt.$router.go()" class="btn btn-primary btn-lg">New Game</button>
+                </div>
+                <div class="col-12 d-flex justify-content-center align-items-center" v-else style="height: 300px;">
                     <button @click="dealCards" class="btn btn-primary btn-lg">Start</button>
                 </div>
             </div>
@@ -146,11 +161,13 @@ export default {
         MdbCardBody
     },
     mounted(){
-        // this.dealCards();
-        // console.log(players)
+        this.problemsDeck = this.shuffleArray(this.problemsDeck)
     },
     data(){
         return{
+            winner:null,
+            runningNumberForProblems:0,
+            daysLeft:3,
             showModal: false,
             reasoning:"",
             isDragging: false,
@@ -411,6 +428,126 @@ export default {
                     id:9,
                     text:"birth rate is going through the roof.",
                 },
+                {
+                    id:10,
+                    text:"lack of access to education",
+                },
+                {
+                    id:11,
+                    text:"poor infrastructure",
+                },
+                {
+                    id:12,
+                    text:"malnutrition",
+                },
+                {
+                    id:13,
+                    text:"poor health",
+                },
+                {
+                    id:14,
+                    text:"lack of basic necessities such as clean water and sanitation",
+                },
+                {
+                    id:15,
+                    text:"high rates of disease and death.",
+                },
+                {
+                    id:16,
+                    text:"lack of funding, resources, and trained medical professionals.",
+                },
+                {
+                    id:17,
+                    text:"deforestation",
+                },
+                {
+                    id:18,
+                    text:"soil erosion",
+                },
+                {
+                    id:19,
+                    text:"desertification",
+                },
+                {
+                    id:20,
+                    text:"decreased agricultural productivity",
+                },
+                {
+                    id:21,
+                    text:"Limited access to clean water",
+                },
+                {
+                    id:22,
+                    text:"drought",
+                },
+                {
+                    id:23,
+                    text:"crop failures",
+                },
+                {
+                    id:24,
+                    text:"lack of roads",
+                },
+                {
+                    id:25,
+                    text:"lack of bridges",
+                },
+                {
+                    id:26,
+                    text:"lack of transportation systems",
+                },
+                {
+                    id:27,
+                    text:"Women have limited access to education",
+                },
+                {
+                    id:28,
+                    text:"lack access to reliable sources of energy",
+                },
+                {
+                    id:29,
+                    text:"Corruption",
+                },
+                {
+                    id:30,
+                    text:"lack access to formal financial services",
+                },
+                {
+                    id:31,
+                    text:"Lack of affordable housing",
+                },
+                {
+                    id:32,
+                    text:"unsanitary living conditions",
+                },
+                {
+                    id:33,
+                    text:"limited access to internet",
+                },
+                {
+                    id:34,
+                    text:"Child labor",
+                },
+                {
+                    id:35,
+                    text:"floods",
+                },
+                {
+                    id:36,
+                    text:"hurricanes",
+                },
+                {
+                    id:37,
+                    text:"earthquakes ",
+                },
+                {
+                    id:38,
+                    text:"racism",
+                },
+                {
+                    id:39,
+                    text:"lack of legal representation",
+                },
             ],
             players:[
                 {
@@ -420,6 +557,7 @@ export default {
                     isCurrentPlayer: true,
                     isVoter:false,
                     votes: 0,
+                    voted:false,
                     cards: [],
                 },
                 {
@@ -429,6 +567,7 @@ export default {
                     isCurrentPlayer: false,
                     isVoter:false,
                     votes: 0,
+                    voted:false,
                     cards: [],
                 },
                 {
@@ -438,6 +577,7 @@ export default {
                     isCurrentPlayer: false,
                     isVoter:false,
                     votes: 0,
+                    voted:false,
                     cards: [],
                 },
                 {
@@ -446,6 +586,7 @@ export default {
                     played:false,
                     isCurrentPlayer: false,
                     isVoter:true,
+                    voted:false,
                     votes: 0,
                     cards: [],
                 },
@@ -456,10 +597,58 @@ export default {
         onConfirmRanking(){
             const sortedArray = [...this.cardLeftPositions].sort((a, b) => a - b);
             const lowestValues = sortedArray.slice(0, 3);
-            const players = lowestValues.map(value => this.table[this.cardLeftPositions.indexOf(value)].player);
-            players[0].votes += 25
-            players[1].votes += 18
-            players[2].votes += 15
+            const _players = lowestValues.map(value => this.table[this.cardLeftPositions.indexOf(value)].player);
+            _players[0].votes += 25
+            _players[1].votes += 18
+            _players[2].votes += 15
+            this.nextTurn()
+        },
+        nextTurn(){
+            this.currentProblemCard = this.problemsDeck[this.runningNumberForProblems++]
+            this.table = []
+            let temp = this.getCurrentPlayer()
+            this.isVoterTurn=false
+            temp.voted=true
+            temp.isVoter = false
+            for(let i = 0; i < this.playerCount; i++){
+                this.players[i].played=false;
+            }
+            for(let j = 0; j < this.playerCount; j++){
+                if(!this.players[j].voted){
+                    this.players[j].isVoter = true
+                    for (let i = 0; i < this.playerCount; i++) {
+                        if(!this.players[i].played && !this.players[i].isVoter){
+                            this.players[i].isCurrentPlayer = true;
+                            return
+                        }
+                    }
+                }
+            }
+            this.nextDay()
+        },
+        nextDay(){
+            this.daysLeft--
+            if(this.daysLeft>0){
+                for(let i = 0; i < this.playerCount; i++){
+                    this.players[i].voted = false
+                    this.players[i].played = false
+                    this.players[i].isCurrentPlayer = false
+                    this.players[i].isVoter = false
+                    this.players[i].cards = []
+                }
+                this.players[0].isCurrentPlayer = true
+                this.players[3].isVoter = true
+                this.dealCards()
+            }
+            else {
+                let temp = this.players[0]
+                for(let i = 0; i < this.playerCount; i++){
+                    if(temp.votes<this.players[i].votes){
+                        temp = this.players[i]
+                    }
+                }
+                this.winner = temp
+            }
         },
         onCardMouseDown(index, event) {
             event.preventDefault();
@@ -492,8 +681,7 @@ export default {
             this.cardLeftPositions = cardLeftPositions;
         },
         dealCards(){
-            this.problemsDeck = this.shuffleArray(this.problemsDeck)
-            this.currentProblemCard = this.problemsDeck[0]
+            this.currentProblemCard = this.problemsDeck[this.runningNumberForProblems++]
             let shuffleed = this.shuffleArray(this.policyDeck)
             let running = 0
             for (let i = 0;i<this.playerCount;i++) {
@@ -532,7 +720,8 @@ export default {
         },
         choseCard(card){
             this.showModal=false;
-            this.table.push({card:card,player:this.getCurrentPlayer()})
+            this.table.push({card:card,player:this.getCurrentPlayer(),reasoning:this.reasoning})
+            this.reasoning=""
             this.getCurrentPlayer().cards = this.getCurrentPlayer().cards.filter(obj => obj !== card)
             this.nextPlayer()
         },

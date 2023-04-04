@@ -8,6 +8,7 @@
     "postinstall": "nuxt prepare"
   },
   "devDependencies": {
+    "@nuxt/bridge": "^0.10.1",
     "@nuxt/types": "^2.16.3",
     "nuxt": "^3.1.0",
     "sass": "^1.57.1",
@@ -18,7 +19,8 @@
     "bootstrap-vue": "^2.23.1",
     "firebase": "^9.16.0",
     "mdbvue": "^6.7.3",
-    "sweetalert2": "^11.7.1",
-    "vue": "^3.2.45"
+    "sweetalert2": "^11.4.8",
+    "vue": "^3.2.45",
+    "vuetify": "^3.1.4"
   }
 }

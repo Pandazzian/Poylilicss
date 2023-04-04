@@ -60,6 +60,7 @@ const config: NuxtConfig = {
   // Plugins configuration
   plugins: [
     // '@/plugins/my-plugin.ts'
+    '~/plugins/vuetify.ts'
   ],
 
   // Modules configuration
