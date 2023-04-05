@@ -49,12 +49,21 @@
                                 v-for="(card, index) in table"
                                 :key="card.card.id"
                                 class="card-grab card "
-                                :style="{ left: cardLeftPositions[index] + 'px' }"
+                                :style="{ left: cardLeftPositions[index] + 'px',borderColor: card.rank===''?'black':card.rank==='1st'?'#ffd700':card.rank==='2nd'?'#c0c0c0':'#CD7F32',borderWidth: '3px'}"
                                 style="padding-top: 8rem;padding-bottom: 8rem;align-items: center;"
                                 @mousedown="onCardMouseDown(index, $event)"
                                 text="Tooltip"
                             >   
+                                <div 
+                                    style="position: absolute; top: 0; right: 8px;" 
+                                    v-if="card.rank!==''"
+                                    :style="{ color: card.rank==='1st'?'#ffd700':card.rank==='2nd'?'#c0c0c0':'#CD7F32'}"
+                                    >
+                                    <b-badge variant="primary">{{ card.rank }}</b-badge>
+                                </div>
+                                <!-- <span class="badge" v-if="card.rank!==''" :style="{ color: card.rank==='1st'?'#ffd700':card.rank==='2nd'?'#c0c0c0':'#CD7F32'}">{{ card.rank }}</span> -->
                                 {{ isVoterTurn?card.card.text:card.player.playerName+"'s card'" }}
+                                <!-- <span class="badge badge-light">{{ card.rank }}</span> -->
                                 <!-- <div v-if="showText && isVoterTurn">
                                     This text will be displayed on hover.
                                 </div> -->
@@ -594,13 +603,16 @@ export default {
         }
     },
     methods:{
-        onConfirmRanking(){
+        getCardFromCardRank(){
             const sortedArray = [...this.cardLeftPositions].sort((a, b) => a - b);
             const lowestValues = sortedArray.slice(0, 3);
-            const _players = lowestValues.map(value => this.table[this.cardLeftPositions.indexOf(value)].player);
-            _players[0].votes += 25
-            _players[1].votes += 18
-            _players[2].votes += 15
+            return lowestValues.map(value => this.table[this.cardLeftPositions.indexOf(value)]);
+        },
+        onConfirmRanking(){
+            const _players = this.getCardFromCardRank()
+            _players[0].player.votes += 25
+            _players[1].player.votes += 18
+            _players[2].player.votes += 15
             this.nextTurn()
         },
         nextTurn(){
@@ -669,6 +681,11 @@ export default {
             this.isDragging = false;
             this.startIndex = null;
             this.startLeft = null;
+            let _players = this.getCardFromCardRank()
+            _players[0].rank = "1st"
+            _players[1].rank = "2nd"
+            _players[2].rank = "3rd"
+            console.log(_players)
             document.removeEventListener('mousemove', this.onMouseMove);
             document.removeEventListener('mouseup', this.onMouseUp);
         },
@@ -720,7 +737,12 @@ export default {
         },
         choseCard(card){
             this.showModal=false;
-            this.table.push({card:card,player:this.getCurrentPlayer(),reasoning:this.reasoning})
+            this.table.push({
+                card:card,
+                player:this.getCurrentPlayer(),
+                reasoning:this.reasoning,
+                rank:""
+            })
             this.reasoning=""
             this.getCurrentPlayer().cards = this.getCurrentPlayer().cards.filter(obj => obj !== card)
             this.nextPlayer()
@@ -747,16 +769,11 @@ export default {
             if(allPlayed){
                 this.isVoterTurn = true;
             }
-            // console.log(this.players)
         },
         shuffleArray(array) {
-            // Copy the original array to avoid modifying the original
             const shuffledArray = [...array];
-
             for (let i = shuffledArray.length - 1; i > 0; i--) {
-                // Generate a random index from 0 to i
                 const j = Math.floor(Math.random() * (i + 1));
-                // Swap the elements at i and j
                 [shuffledArray[i], shuffledArray[j]] = [shuffledArray[j], shuffledArray[i]];
             }
 

@@ -78,6 +78,9 @@ const config: NuxtConfig = {
       lang: 'en'
     }
   },
+  nitro:{
+    preset: "firebase"
+  },
 
   // Build configuration
   build: {
